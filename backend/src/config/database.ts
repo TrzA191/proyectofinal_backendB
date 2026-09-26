@@ -10,8 +10,8 @@ const dbConfig: sql.config = {
     database: process.env.DB_DATABASE || 'SistemaComercial',
     port: parseInt(process.env.DB_PORT || '1433'),
     options: {
-        encrypt: false, // Cambiar a true si estás usando Azure SQL o SSL
-        trustServerCertificate: true // Requerido para entornos de desarrollo local
+        encrypt: false,
+        trustServerCertificate: true
     }
 };
 
