@@ -1,0 +1,13 @@
+# Dependencias de Node.js
+node_modules/
+dist/
+
+# Archivos de entorno y credenciales (SEGURIDAD)
+.env
+*.env
+
+# Archivos de sistema / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
