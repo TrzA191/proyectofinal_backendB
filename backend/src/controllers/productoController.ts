@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { AuthRequest } from '../middlewares/authMiddleware';
 import sql from 'mssql';
 import { getDbConnection } from '../config/database';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
@@ -87,5 +88,35 @@ export const crearProducto = async (req: Request, res: Response): Promise<void> 
     } catch (error) {
         console.error('Error al crear producto:', error);
         res.status(500).json({ error: 'Error interno al registrar el producto' });
+    }
+};
+
+
+// 🔐 Registrar Compra / Venta (Extrae el UsuarioGuid directamente del JWT para evitar IDOR)
+export const registrarCompra = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { productoGuid, cantidad } = req.body;
+        const usuarioGuid = req.usuario?.usuarioGuid; // 🔐 Tomado de forma segura del JWT
+
+        if (!productoGuid || !cantidad || cantidad <= 0) {
+            res.status(400).json({ error: 'ProductoGuid y cantidad válida son requeridos' });
+            return;
+        }
+
+        const pool = await getDbConnection();
+
+        const result = await pool.request()
+            .input('UsuarioGuid', sql.UniqueIdentifier, usuarioGuid)
+            .input('ProductoGuid', sql.UniqueIdentifier, productoGuid)
+            .input('Cantidad', sql.Int, cantidad)
+            .execute('Comercial.usp_RegistrarCompraSegura');
+
+        res.status(201).json({
+            mensaje: 'Compra registrada con éxito',
+            detalles: result.recordset[0]
+        });
+    } catch (error: any) {
+        console.error('Error al registrar compra:', error);
+        res.status(400).json({ error: error.message || 'Error al procesar la compra' });
     }
 };

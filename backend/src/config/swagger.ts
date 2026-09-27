@@ -10,15 +10,20 @@ const options: swaggerJSDoc.Options = {
         servers: [
             {
                 url: 'http://localhost:3000',
-                description: 'Servidor Local HTTP'
-            },
-            {
-                url: 'https://localhost:3001',
-                description: 'Servidor Local HTTPS Seguro'
+                description: 'Servidor Local'
             }
         ],
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT'
+                }
+            }
+        }
     },
-    apis: ['./src/routes/*.ts'], // Archivos donde están las anotaciones OpenAPI
+    apis: ['./src/routes/*.ts'],
 };
 
 export const swaggerSpec = swaggerJSDoc(options);
