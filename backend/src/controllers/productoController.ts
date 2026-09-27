@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { AuthRequest } from '../middlewares/authMiddleware';
+
 import sql from 'mssql';
 import { getDbConnection } from '../config/database';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
@@ -93,7 +93,7 @@ export const crearProducto = async (req: Request, res: Response): Promise<void> 
 
 
 // 🔐 Registrar Compra / Venta (Extrae el UsuarioGuid directamente del JWT para evitar IDOR)
-export const registrarCompra = async (req: AuthRequest, res: Response): Promise<void> => {
+export const registrarCompra = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
         const { productoGuid, cantidad } = req.body;
         const usuarioGuid = req.usuario?.usuarioGuid; // 🔐 Tomado de forma segura del JWT
