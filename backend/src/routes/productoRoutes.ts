@@ -7,8 +7,8 @@ const router = Router();
 // Ruta de búsqueda: Cualquier usuario autenticado puede buscar
 router.get('/buscar', verificarToken, buscarProductos);
 
-// Ruta de historial: Requiere token (y el controlador valida Anti-IDOR)
-router.get('/historial/:usuarioGuid', verificarToken, obtenerHistorialCompras);
+// 🔐 Ruta de historial protegida contra IDOR: el ID se extrae del Token
+router.get('/historial', verificarToken, obtenerHistorialCompras);
 
 // Ruta de compra: Cualquier cliente autenticado puede realizar una compra (El usuarioGuid se toma del JWT)
 router.post('/comprar', verificarToken, registrarCompra);

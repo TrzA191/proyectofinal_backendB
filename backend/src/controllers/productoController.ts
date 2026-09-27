@@ -25,14 +25,13 @@ export const buscarProductos = async (req: Request, res: Response): Promise<void
     }
 };
 
-// ⚠ FASE 0: Obtener historial de compras (Vulnerable a IDOR)
-// No valida si el usuarioAutenticado es dueño de ese UsuarioGuid
-export const obtenerHistorialCompras = async (req: Request, res: Response): Promise<void> => {
+// 🔐 Historial de compras de forma segura (Anti-IDOR)
+export const obtenerHistorialCompras = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { usuarioGuid } = req.params;
+        const usuarioGuid = req.usuario?.usuarioGuid;
 
         if (!usuarioGuid) {
-            res.status(400).json({ error: 'UsuarioGuid es requerido' });
+            res.status(401).json({ error: 'Usuario no autenticado o token inválido' });
             return;
         }
 
