@@ -8,7 +8,7 @@ const dbConfig: sql.config = {
     password: process.env.DB_PASSWORD || '123123123',
     server: process.env.DB_SERVER || 'localhost',
     database: process.env.DB_DATABASE || 'SistemaComercial',
-    port: 1433,
+    port: Number(process.env.DB_PORT) || 1433,
     options: {
         encrypt: false,
         trustServerCertificate: true

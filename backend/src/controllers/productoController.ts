@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import sql from 'mssql';
 import { getDbConnection } from '../config/database';
+import { AuthenticatedRequest } from '../middleware/authMiddleware';
 
 // ⚠ FASE 0: Búsqueda con concatenación de cadenas (SQL Injection)
 export const buscarProductos = async (req: Request, res: Response): Promise<void> => {
@@ -26,14 +27,19 @@ export const buscarProductos = async (req: Request, res: Response): Promise<void
 
 // ⚠ FASE 0: Obtener historial de compras (Vulnerable a IDOR)
 // No valida si el usuarioAutenticado es dueño de ese UsuarioGuid
-export const obtenerHistorialCompras = async (req: Request, res: Response): Promise<void> => {
+export const obtenerHistorialCompras = async (
+    req: AuthenticatedRequest,
+    res: Response
+): Promise<void> => {
     try {
-        const { usuarioGuid } = req.params;
-
-        if (!usuarioGuid) {
-            res.status(400).json({ error: 'UsuarioGuid es requerido' });
+        if (!req.usuario) {
+            res.status(401).json({
+                error: 'Autenticación requerida'
+            });
             return;
         }
+
+        const usuarioGuid = req.usuario.usuarioGuid;
 
         const pool = await getDbConnection();
 
@@ -45,9 +51,13 @@ export const obtenerHistorialCompras = async (req: Request, res: Response): Prom
             usuarioGuid,
             historial: result.recordset
         });
+
     } catch (error) {
         console.error('Error al obtener historial:', error);
-        res.status(500).json({ error: 'Error interno al consultar historial' });
+
+        res.status(500).json({
+            error: 'Error interno al consultar historial'
+        });
     }
 };
 

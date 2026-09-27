@@ -1,36 +1,58 @@
 import { Request, Response } from 'express';
-import sql from 'mssql';
+import bcrypt from 'bcrypt';
 import { getDbConnection } from '../config/database';
+import { generarToken } from '../services/jwtService';
 
-// ⚠ FASE 0: Login Vulnerable
-export const login = async (req: Request, res: Response): Promise<void> => {
+export const login = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
     try {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            res.status(400).json({ error: 'Email y contraseña requeridos' });
+            res.status(400).json({
+                error: 'Email y contraseña requeridos'
+            });
             return;
         }
 
         const pool = await getDbConnection();
 
-        // ⚠ FASE 0: Llama al SP que valida contraseña en texto plano sin hash
         const result = await pool.request()
-            .input('Email', sql.NVarChar(100), email)
-            .input('Password', sql.NVarChar(100), password)
-            .execute('Seguridad.usp_Login');
+            .input('Email', email)
+            .execute('Seguridad.usp_ObtenerUsuarioPorEmail');
 
         if (result.recordset.length === 0) {
-            // Error genérico o revelador
-            res.status(401).json({ error: 'Credenciales inválidas' });
+            res.status(401).json({
+                error: 'Credenciales inválidas'
+            });
             return;
         }
 
         const usuario = result.recordset[0];
 
-        // ⚠ FASE 0: Devuelve los datos del usuario directamente (incluida la contraseña que devuelve el SP)
+        const passwordValida = await bcrypt.compare(
+            password,
+            usuario.PasswordHash
+        );
+
+        if (!passwordValida) {
+            res.status(401).json({
+                error: 'Credenciales inválidas'
+            });
+            return;
+        }
+
+        const token = generarToken({
+            usuarioGuid: usuario.UsuarioGuid,
+            email: usuario.Email,
+            rol: usuario.Rol
+        });
+
         res.json({
-            mensaje: 'Login exitoso (Fase 0)',
+            mensaje: 'Login exitoso',
+            token,
             usuario: {
                 usuarioGuid: usuario.UsuarioGuid,
                 nombreCompleto: usuario.NombreCompleto,
@@ -38,8 +60,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
                 rol: usuario.Rol
             }
         });
+
     } catch (error) {
         console.error('Error en login:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
+
+        res.status(500).json({
+            error: 'Error interno del servidor'
+        });
     }
 };
