@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { getRequiredEnv } from '../config/env';
 import { registrarEventoAuditoria } from '../utils/auditLogger';
 
 export interface AuthRequest extends Request {
@@ -20,7 +21,7 @@ export const verificarToken = (req: AuthRequest, res: Response, next: NextFuncti
     }
 
     try {
-        const secret = process.env.JWT_SECRET || 'secreto_super_seguro_123';
+        const secret = getRequiredEnv('JWT_SECRET');
         const decoded = jwt.verify(token, secret) as any;
 
         req.usuario = {

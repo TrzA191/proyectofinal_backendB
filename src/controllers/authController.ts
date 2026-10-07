@@ -3,6 +3,7 @@ import sql from 'mssql';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { getDbConnection } from '../config/database';
+import { getRequiredEnv } from '../config/env';
 import { registrarEventoAuditoria } from '../utils/auditLogger';
 
 // Contador en memoria para intentos fallidos por email
@@ -49,7 +50,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         );
 
         // Generar Token JWT (1 hora)
-        const secret = process.env.JWT_SECRET || 'secreto_super_seguro_123';
+        const secret = getRequiredEnv('JWT_SECRET');
         const token = jwt.sign(
             { usuarioGuid: usuario.UsuarioGuid, email: usuario.Email, rol: usuario.Rol },
             secret,

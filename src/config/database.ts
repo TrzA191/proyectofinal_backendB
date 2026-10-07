@@ -1,14 +1,12 @@
 import sql from 'mssql';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { getRequiredEnv } from './env';
 
 const dbConfig: sql.config = {
-    user: process.env.DB_USER || 'sa',
-    password: process.env.DB_PASSWORD || '123123123',
-    server: process.env.DB_SERVER || 'localhost',
-    database: process.env.DB_DATABASE || 'SistemaComercial',
-    port: 1433,
+    user: getRequiredEnv('DB_USER'),
+    password: getRequiredEnv('DB_PASSWORD'),
+    server: getRequiredEnv('DB_SERVER'),
+    database: getRequiredEnv('DB_DATABASE'),
+    port: Number(process.env.DB_PORT || 1433),
     options: {
         encrypt: false,
         trustServerCertificate: true
