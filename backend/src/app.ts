@@ -15,12 +15,17 @@ const PORT = process.env.PORT || 3000;
 // Headers de seguridad
 app.use(helmet());
 
+
 // CORS restringido al frontend
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: [
+        'http://localhost:5173',
+        'https://localhost:5173'
+    ],
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 
 app.use(express.json());
 
