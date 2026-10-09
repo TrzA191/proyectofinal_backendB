@@ -1,17 +1,17 @@
 import { getDbConnection } from './config/database';
 
 const test = async () => {
-    console.log('🔄 Intentando conectar a SQL Server...');
+    console.log('🔄 Intentando conectar a MySQL...');
     try {
         const pool = await getDbConnection();
         
-        // Ejecutamos una consulta simple para verificar la versión de SQL Server
-        const result = await pool.request().query('SELECT @@VERSION AS Version, DB_NAME() AS DatabaseName');
+        // Ejecutamos una consulta simple para verificar la versión de MySQL
+        const [rows]: any = await pool.query('SELECT VERSION() AS Version, DATABASE() AS DatabaseName');
         console.log('🎉 ¡Conexión Exitosa!');
-        console.log('Base de datos conectada:', result.recordset[0].DatabaseName);
-        console.log('Versión de SQL Server:', result.recordset[0].Version.split('\n')[0]);
+        console.log('Base de datos conectada:', rows[0].DatabaseName);
+        console.log('Versión de MySQL:', rows[0].Version);
 
-        await pool.close();
+        await pool.end();
         process.exit(0);
     } catch (error) {
         console.error('❌ Falló la prueba de conexión:', error);

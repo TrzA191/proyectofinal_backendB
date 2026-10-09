@@ -4,3 +4,4 @@ dist/
 !.env.example
 *.log
 db_sistemacomercial.bacpac
+script_mysql.txt

@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middlewares/authMiddleware';
-import sql from 'mssql';
 import { getDbConnection } from '../config/database';
 
 // ⚠ FASE 0: Búsqueda con concatenación de cadenas (SQL Injection)
@@ -11,13 +10,12 @@ export const buscarProductos = async (req: Request, res: Response): Promise<void
         const pool = await getDbConnection();
 
         // ⚠ FASE 0: Ejecuta el SP usp_BuscarProductos que concatena dinámicamente el input
-        const result = await pool.request()
-            .input('Filtro', sql.NVarChar(200), filtro)
-            .execute('Comercial.usp_BuscarProductos');
+        const [rows]: any = await pool.execute('CALL Comercial_usp_BuscarProductos(?)', [filtro]);
+        const recordset = rows[0];
 
         res.json({
-            total: result.recordset.length,
-            productos: result.recordset
+            total: recordset.length,
+            productos: recordset
         });
     } catch (error) {
         console.error('Error al buscar productos:', error);
@@ -37,13 +35,12 @@ export const obtenerHistorialCompras = async (req: AuthRequest, res: Response): 
 
         const pool = await getDbConnection();
 
-        const result = await pool.request()
-            .input('UsuarioGuid', sql.UniqueIdentifier, usuarioGuid)
-            .execute('Comercial.usp_ObtenerHistorialCompras');
+        const [rows]: any = await pool.execute('CALL Comercial_usp_ObtenerHistorialCompras(?)', [usuarioGuid]);
+        const recordset = rows[0];
 
         res.json({
             usuarioGuid,
-            historial: result.recordset
+            historial: recordset
         });
     } catch (error) {
         console.error('Error al obtener historial:', error);
@@ -63,16 +60,14 @@ export const crearProducto = async (req: Request, res: Response): Promise<void> 
 
         const pool = await getDbConnection();
 
-        const result = await pool.request()
-            .input('CodigoSKU', sql.NVarChar(20), codigoSKU)
-            .input('Nombre', sql.NVarChar(150), nombre)
-            .input('Precio', sql.Decimal(10, 2), precio)
-            .input('Stock', sql.Int, stock)
-            .execute('Comercial.usp_CrearProducto');
+        const [rows]: any = await pool.execute('CALL Comercial_usp_CrearProducto(?, ?, ?, ?)', [
+            codigoSKU, nombre, precio, stock
+        ]);
+        const recordset = rows[0];
 
         res.status(201).json({
             mensaje: 'Producto creado exitosamente',
-            producto: result.recordset[0]
+            producto: recordset[0]
         });
     } catch (error) {
         console.error('Error al crear producto:', error);
@@ -94,15 +89,14 @@ export const registrarCompra = async (req: AuthRequest, res: Response): Promise<
 
         const pool = await getDbConnection();
 
-        const result = await pool.request()
-            .input('UsuarioGuid', sql.UniqueIdentifier, usuarioGuid)
-            .input('ProductoGuid', sql.UniqueIdentifier, productoGuid)
-            .input('Cantidad', sql.Int, cantidad)
-            .execute('Comercial.usp_RegistrarCompraSegura');
+        const [rows]: any = await pool.execute('CALL Comercial_usp_RegistrarCompraSegura(?, ?, ?)', [
+            usuarioGuid, productoGuid, cantidad
+        ]);
+        const recordset = rows[0];
 
         res.status(201).json({
             mensaje: 'Compra registrada con éxito',
-            detalles: result.recordset[0]
+            detalles: recordset[0]
         });
     } catch (error: any) {
         console.error('Error al registrar compra:', error);

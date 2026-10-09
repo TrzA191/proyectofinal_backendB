@@ -1,25 +1,30 @@
-import sql from 'mssql';
+import mysql, { Pool } from 'mysql2/promise';
 import { getRequiredEnv } from './env';
 
-const dbConfig: sql.config = {
+const dbConfig = {
     user: getRequiredEnv('DB_USER'),
     password: getRequiredEnv('DB_PASSWORD'),
-    server: getRequiredEnv('DB_SERVER'),
+    host: getRequiredEnv('DB_SERVER'), // Utiliza host para MySQL en lugar de server
     database: getRequiredEnv('DB_DATABASE'),
-    port: Number(process.env.DB_PORT || 1433),
-    options: {
-        encrypt: false,
-        trustServerCertificate: true
-    }
+    port: Number(process.env.DB_PORT || 3306),
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 };
 
-export const getDbConnection = async (): Promise<sql.ConnectionPool> => {
+let pool: Pool | null = null;
+
+export const getDbConnection = async (): Promise<Pool> => {
     try {
-        const pool = await sql.connect(dbConfig);
-        console.log('✅ Conexión exitosa a la base de datos SQL Server');
+        if (!pool) {
+            pool = mysql.createPool(dbConfig);
+            // Verificar la conexión
+            await pool.query('SELECT 1');
+            console.log('✅ Conexión exitosa a la base de datos MySQL');
+        }
         return pool;
     } catch (error) {
-        console.error('❌ Error al conectar a SQL Server:', error);
+        console.error('❌ Error al conectar a MySQL:', error);
         throw error;
     }
 };

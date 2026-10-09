@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import sql from 'mssql';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { getDbConnection } from '../config/database';
@@ -20,18 +19,17 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
         const pool = await getDbConnection();
 
-        const result = await pool.request()
-            .input('Email', sql.NVarChar(100), email)
-            .execute('Seguridad.usp_ObtenerUsuarioPorEmail');
+        const [rows]: any = await pool.execute('CALL Seguridad_usp_ObtenerUsuarioPorEmail(?)', [email]);
+        const recordset = rows[0]; // First result set from MySQL stored procedure
 
         // Si el usuario no existe o la contraseña falla
-        if (result.recordset.length === 0) {
+        if (recordset.length === 0) {
             await manejarIntentoFallido(email, req);
             res.status(401).json({ error: 'Credenciales inválidas' });
             return;
         }
 
-        const usuario = result.recordset[0];
+        const usuario = recordset[0];
         const passwordValida = await bcrypt.compare(password, usuario.PasswordHash) || (password === usuario.PasswordHash);
 
         if (!passwordValida) {
